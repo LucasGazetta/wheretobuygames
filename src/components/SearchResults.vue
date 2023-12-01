@@ -9,72 +9,72 @@
         <thead>
           <tr>
             <th>Store</th>
+            <th>Game</th>
             <th>Price</th>
-            <th>Link</th>
           </tr>
         </thead>
-        <tbody>
-          <tr v-for="result in searchResults" :key="result.id">
-            <td>{{ result.store }}</td>
-            <td>{{ result.price }}</td>
-            <td><a :href="result.link" target="_blank">Visit Store</a></td>
-          </tr>
-        </tbody>
+            <tbody>
+                <tr v-for="(result, index) in searchResults" :key="index">
+                    <td>
+                    <template v-if="result.price !== 'Not Found'">
+                        <a :href="result.url" target="_blank">{{ result.store }}</a>
+                    </template>
+                    <template v-else>
+                        {{ result.store }}
+                    </template>
+                    </td>
+                    <td>{{ result.title }}</td>
+                    <td>{{ result.price }}</td>
+                </tr>
+            </tbody>
       </table>
     </section>
+    <p class="search-tip text-center">
+      The title doesn't match your search? Try searching again writing the full name of the game.
+    </p>
+
+    <div class="search-again-button">
+        <router-link to="/" class="btn-search-again">Search Again</router-link>
+    </div>
   </div>
 </template>
 
 <script>
 export default {
   name: "SearchResultsPage",
-  props: {
-    searchResults: Array
+  data() {
+    return {
+      searchResults: []
+    };
+  },
+  mounted() {
+    let results = localStorage.getItem('searchResults');
+    if (results) {
+      this.searchResults = JSON.parse(results);
+      this.sortResultsByPrice();
+      console.log("Dados ordenados:", this.searchResults);
+    }
+  },
+  methods: {
+    sortResultsByPrice() {
+      this.searchResults = this.searchResults
+        .map(result => ({ ...result, numericPrice: this.extractNumber(result.price) }))
+        .filter(result => !isNaN(result.numericPrice))
+        .sort((a, b) => a.numericPrice - b.numericPrice);
+    },
+    extractNumber(priceString) {
+      if (typeof priceString === 'string') {
+        let cleanString = priceString.replace('R$', '').replace('$', '').replace(',', '.');
+        let number = parseFloat(cleanString);
+        return isNaN(number) ? Number.MAX_VALUE : number;
+      }
+      return Number.MAX_VALUE;
+    }
   }
 };
+
 </script>
 
 <style scoped>
-.search-results-page {
-  background-color: #080612;
-  color: #fff;
-  min-height: 100vh;
-  padding: 2rem;
-}
-
-.page-title {
-  color: #fe5441;
-  margin-bottom: 2rem;
-}
-
-.table-section {
-  max-width: 800px;
-  margin: auto;
-  overflow-x: auto;
-}
-
-.results-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.results-table th, .results-table td {
-  text-align: left;
-  padding: 0.5rem;
-  border-bottom: 1px solid #333;
-}
-
-.results-table th {
-  background-color: #222;
-  color: #fff;
-}
-
-.results-table td a {
-  color: #fe5441;
-  text-decoration: none;
-}
-
-.results-table td a:hover {
-  color: #fa3621;
-}
+@import "../assets/css/searchresults.css";
 </style>
